@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--bg-card-hover:rgba(255,255,255,0.10);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--green:#2ecc71;--green-bg:rgba(46,204,113,0.13);--red:#e74c3c;--red-bg:rgba(231,76,60,0.13);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--sidebar:230px;--r:12px;--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg-deep);color:var(--text);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:4px;}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+a{text-decoration:none;}
+
+.app-shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);height:100vh;background:rgba(0,0,0,0.25);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-logo{padding:28px 22px 20px;font-family:var(--font-d);font-size:26px;letter-spacing:-.5px;border-bottom:1px solid var(--border);}
+.sb-logo span{color:var(--accent);}
+.sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;border:1px solid transparent;text-decoration:none;}
+.sb-item:hover{background:var(--bg-card-hover);color:var(--text);}
+.sb-item.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(74,159,255,.2);}
+.sb-item svg{width:17px;height:17px;flex-shrink:0;}
+.sb-bottom{padding:14px 10px;}
+.sb-user{padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-card);border:1px solid var(--border);margin-bottom:8px;}
+.sb-user-name{font-size:13px;font-weight:600;}
+.sb-user-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.main{flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+.page{padding:32px 36px;animation:fadeup .3s ease;}
+.page-title{font-family:var(--font-d);font-size:30px;letter-spacing:-.5px;margin-bottom:6px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:24px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:15px;font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-blue{background:var(--accent-bg);color:var(--accent);}
+.btn{padding:10px 18px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:opacity .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-ghost{background:transparent;border:1px solid var(--border-hi);color:var(--text);}
+.btn-ghost:hover{background:var(--bg-card-hover);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(231,76,60,.3);}
+.btn-danger:hover{background:rgba(231,76,60,.22);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.admin-header{display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(90deg,rgba(74,159,255,.12),transparent);border:1px solid rgba(74,159,255,.2);border-radius:var(--r);margin-bottom:24px;}
+.admin-badge{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(74,159,255,.3);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg-card-hover);}
+.tbl-actions{display:flex;gap:6px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#012458;border:1px solid var(--border-hi);border-radius:18px;padding:32px;width:460px;max-height:90vh;overflow-y:auto;animation:fadeup .3s ease;}
+.modal h2{font-family:var(--font-d);font-size:22px;margin-bottom:20px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.fg input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--font-b);}
+.fg input:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sb-logo">in<span>S</span>ight</div>
+    <nav class="sb-nav">
+      <a href="admin.html" class="sb-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Admin Panel
+      </a>
+      <a href="profile.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-user-name">Admin Mohammed</div>
+        <div class="sb-user-role">Administrator</div>
+      </div>
+      <a href="index.html" class="sb-item" style="color:var(--red);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-title">Admin Panel</div>
+      <div class="page-sub">Manage all registered users</div>
+
+      <div class="admin-header">
+        <div class="admin-badge">Admin</div>
+        <div>
+          <div style="font-weight:600;">Admin Mohammed</div>
+          <div style="font-size:12px;color:var(--muted);">Full system access</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:20px;text-align:center;">
+          <div><div style="font-family:var(--font-d);font-size:22px;" id="adm-total">0</div><div style="font-size:11px;color:var(--muted);">Users</div></div>
+          <div><div style="font-family:var(--font-d);font-size:22px;color:var(--red);" id="adm-blocked">0</div><div style="font-size:11px;color:var(--muted);">Blocked</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr">
+          <span class="sec-title">Registered Users</span>
+          <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Add User</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Age</th><th>Bills</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <h2>Add New User</h2>
+    <div class="fg"><label>Name</label><input type="text" id="nu-name"></div>
+    <div class="fg"><label>Email</label><input type="email" id="nu-email"></div>
+    <div class="fg"><label>Age</label><input type="number" id="nu-age"></div>
+    <div class="fg"><label>Username</label><input type="text" id="nu-username"></div>
+    <div class="fg"><label>Password</label><input type="password" id="nu-pass"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAdd()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let users = [
+  {id:1, name:'Sara Al-Rashidi',  email:'sara@example.com',  age:29, bills:10, blocked:false},
+  {id:2, name:'Feras Al-Otaibi', email:'feras@example.com', age:40, bills:2,  blocked:false},
+  {id:3, name:'Leen Al-Harbi',   email:'leen@example.com',  age:27, bills:0,  blocked:false},
+];
+let nextId = 4;
+
+function renderAdmin(){
+  document.getElementById('adm-total').textContent   = users.length;
+  document.getElementById('adm-blocked').textContent = users.filter(u=>u.blocked).length;
+  document.getElementById('admin-tbody').innerHTML = users.map(u=>`
+    <tr style="${u.blocked?'opacity:.5':''}">
+      <td><strong>${u.name}</strong></td>
+      <td style="color:var(--muted);font-size:13px;">${u.email}</td>
+      <td>${u.age}</td>
+      <td><span class="badge badge-blue">${u.bills}</span></td>
+      <td><span class="badge ${u.blocked?'badge-red':'badge-green'}">${u.blocked?'Blocked':'Active'}</span></td>
+      <td><div class="tbl-actions">
+        <button class="btn ${u.blocked?'btn-ghost':'btn-danger'} btn-sm" onclick="toggleBlock(${u.id})">${u.blocked?'Unblock':'Block'}</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function toggleBlock(id){
+  const u = users.find(x=>x.id===id);
+  if(!u) return;
+  u.blocked = !u.blocked;
+  renderAdmin();
+}
+
+function openAddUser(){
+  ['nu-name','nu-email','nu-age','nu-username','nu-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-add').classList.add('open');
+}
+
+function closeAdd(){
+  document.getElementById('modal-add').classList.remove('open');
+}
+
+function saveNewUser(){
+  const name     = document.getElementById('nu-name').value.trim();
+  const email    = document.getElementById('nu-email').value.trim();
+  const age      = parseInt(document.getElementById('nu-age').value);
+  const username = document.getElementById('nu-username').value.trim();
+  const pass     = document.getElementById('nu-pass').value;
+  if(!name||!email||!username||!pass||isNaN(age)){alert('Fill all fields.');return;}
+  users.push({id:nextId++, name, email, age, bills:0, blocked:false});
+  closeAdd();
+  renderAdmin();
+}
+
+document.getElementById('modal-add').addEventListener('click', e=>{
+  if(e.target===document.getElementById('modal-add')) closeAdd();
+});
+
+renderAdmin();
+</script>
+</body>
+</html>
