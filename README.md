@@ -12,13 +12,9 @@ A household financial management app that helps users track bills, monitor month
 
 ## Tech Stack
 - Frontend: HTML, CSS, JavaScript
-- Backend: Node.js
 - Database: MySQL
 
 ## Course
 IT320 — Practical Software Engineering
 King Saud University
 
-
-## Team Members
-Reem Almaskati
