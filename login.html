@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+body::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(74,159,255,.12) 0%,transparent 65%);top:-200px;right:-150px;pointer-events:none;}
+body::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(46,204,113,.07) 0%,transparent 65%);bottom:-150px;left:-100px;pointer-events:none;}
+@keyframes fadeup{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.login-wrap{position:relative;z-index:1;width:420px;animation:fadeup .5s ease;}
+.auth-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:20px;transition:color .2s;}
+.auth-back:hover{color:var(--text);}
+.login-logo{font-family:var(--font-d);font-size:42px;letter-spacing:-1px;margin-bottom:2px;}
+.login-logo span{color:var(--accent);}
+.login-sub{color:var(--muted);font-size:13px;margin-bottom:32px;}
+.login-card{background:var(--bg-card);border:1px solid var(--border-hi);border-radius:18px;padding:36px;backdrop-filter:blur(20px);}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.fg input,.fg select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--font-b);}
+.fg input:focus,.fg select:focus{border-color:var(--accent);background:rgba(74,159,255,0.07);}
+.fg select option{background:#01204c;}
+.btn-primary{background:var(--accent);color:#fff;width:100%;padding:12px 20px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;font-family:var(--font-b);}
+.btn-primary:hover{opacity:.88;}
+.err{color:#e74c3c;font-size:12px;margin-bottom:10px;display:none;}
+.demo-hint{margin-top:18px;text-align:center;font-size:12px;color:var(--dim);}
+.demo-hint strong{color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <a href="index.html" class="auth-back">← Back to home</a>
+  <div class="login-logo">in<span>S</span>ight</div>
+  <div class="login-sub">Utility Consumption & Tracking System</div>
+  <div class="login-card">
+    <div class="fg"><label>Username</label><input id="li-user" type="text" placeholder="Enter username" autocomplete="off"></div>
+    <div class="fg"><label>Password</label><input id="li-pass" type="password" placeholder="Enter password"></div>
+    <div class="fg">
+      <label>Sign in as</label>
+      <select id="li-role">
+        <option value="user">Household User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div id="li-err" class="err"></div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+  </div>
+  <div class="demo-hint">Demo: <strong>user / user123</strong> &nbsp;·&nbsp; Admin: <strong>admin / admin123</strong></div>
+</div>
+
+<script>
+  const USERS = [
+    {username:'user',  password:'user123',  role:'user'},
+    {username:'admin', password:'admin123', role:'admin'},
+  ];
+
+  function doLogin() {
+    const u    = document.getElementById('li-user').value.trim();
+    const p    = document.getElementById('li-pass').value;
+    const r    = document.getElementById('li-role').value;
+    const err  = document.getElementById('li-err');
+    const found = USERS.find(x => x.username===u && x.password===p && x.role===r);
+    if (!found) {
+      err.textContent = 'Invalid credentials. Try user/user123 or admin/admin123';
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    window.location.href = found.role === 'admin' ? 'admin.html' : 'dashboard.html';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
