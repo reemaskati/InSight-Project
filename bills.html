@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — Bill History</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--bg-card-hover:rgba(255,255,255,0.10);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--green:#2ecc71;--green-bg:rgba(46,204,113,0.13);--red:#e74c3c;--red-bg:rgba(231,76,60,0.13);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--gold:#f4c94b;--sidebar:230px;--r:12px;--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg-deep);color:var(--text);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:4px;}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+a{text-decoration:none;}
+
+.app-shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);height:100vh;background:rgba(0,0,0,0.25);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-logo{padding:28px 22px 20px;font-family:var(--font-d);font-size:26px;letter-spacing:-.5px;border-bottom:1px solid var(--border);}
+.sb-logo span{color:var(--accent);}
+.sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;border:1px solid transparent;text-decoration:none;}
+.sb-item:hover{background:var(--bg-card-hover);color:var(--text);}
+.sb-item.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(74,159,255,.2);}
+.sb-item svg{width:17px;height:17px;flex-shrink:0;}
+.sb-bottom{padding:14px 10px;}
+.sb-user{padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-card);border:1px solid var(--border);margin-bottom:8px;}
+.sb-user-name{font-size:13px;font-weight:600;}
+.sb-user-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.main{flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+.page{padding:32px 36px;animation:fadeup .3s ease;}
+.page-title{font-family:var(--font-d);font-size:30px;letter-spacing:-.5px;margin-bottom:6px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:15px;font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-blue{background:var(--accent-bg);color:var(--accent);}
+.badge-gray{background:rgba(255,255,255,0.08);color:var(--muted);}
+.btn{padding:10px 18px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-ghost{background:transparent;border:1px solid var(--border-hi);color:var(--text);}
+.btn-ghost:hover{background:var(--bg-card-hover);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(231,76,60,.3);}
+.btn-danger:hover{background:rgba(231,76,60,.22);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;padding:9px 14px 9px 36px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:13px;outline:none;font-family:var(--font-b);}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.filter-sel{padding:9px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:13px;outline:none;cursor:pointer;font-family:var(--font-b);}
+.filter-sel option{background:#01204c;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg-card-hover);}
+.tbl-actions{display:flex;gap:6px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#012458;border:1px solid var(--border-hi);border-radius:18px;padding:32px;width:480px;max-height:90vh;overflow-y:auto;animation:fadeup .3s ease;}
+.modal h2{font-family:var(--font-d);font-size:22px;margin-bottom:20px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.fg input,.fg select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--font-b);}
+.fg input:focus,.fg select:focus{border-color:var(--accent);}
+.fg select option{background:#01204c;}
+.pf-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;margin-bottom:10px;}
+.pf-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;}
+.pf-val{font-size:15px;font-weight:500;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sb-logo">in<span>S</span>ight</div>
+    <nav class="sb-nav">
+      <a href="dashboard.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+      </a>
+      <a href="bills.html" class="sb-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>Bill History
+      </a>
+      <a href="profile.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-user-name">Sara Al-Rashidi</div>
+        <div class="sb-user-role">Household User</div>
+      </div>
+      <a href="index.html" class="sb-item" style="color:var(--red);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-title">Bill History</div>
+      <div class="page-sub">All your electricity and water records</div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+          <input type="text" id="bill-search" placeholder="Search by month or year…" oninput="renderTable()">
+        </div>
+        <select class="filter-sel" id="f-year"   onchange="renderTable()"><option value="">All Years</option><option>2025</option><option>2024</option><option>2023</option></select>
+        <select class="filter-sel" id="f-status" onchange="renderTable()"><option value="">All Status</option><option value="under">Under Budget</option><option value="over">Over Budget</option></select>
+        <select class="filter-sel" id="f-type"   onchange="renderTable()"><option value="">All Types</option><option value="electricity">Electricity</option><option value="water">Water</option></select>
+        <button class="btn btn-primary btn-sm" onclick="openAdd()">+ Add Bill</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Month</th><th>Type</th><th>Amount (SAR)</th><th>Consumption</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="bill-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-bill">
+  <div class="modal">
+    <h2 id="modal-title">Add Bill</h2>
+    <input type="hidden" id="edit-id">
+    <div class="fg"><label>Billing Month</label><input type="month" id="b-month"></div>
+    <div class="fg"><label>Utility Type</label><select id="b-type"><option value="electricity">Electricity</option><option value="water">Water</option></select></div>
+    <div class="fg"><label>Amount (SAR)</label><input type="number" id="b-amount" placeholder="e.g. 320"></div>
+    <div class="fg"><label>Consumption (kWh / m³)</label><input type="number" id="b-consumption" placeholder="e.g. 450"></div>
+    <div class="fg"><label>Notes (optional)</label><input type="text" id="b-notes" placeholder="Any notes…"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-bill')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBill()">Save Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal-overlay" id="modal-view">
+  <div class="modal">
+    <h2>Bill Details</h2>
+    <div id="view-content"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-view')">Close</button></div>
+  </div>
+</div>
+
+<script>
+const BUDGET = 500;
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let bills = [
+  {id:1,month:'2025-01',type:'electricity',amount:420,consumption:380,notes:'January billing'},
+  {id:2,month:'2025-01',type:'water',amount:95,consumption:12,notes:''},
+  {id:3,month:'2025-02',type:'electricity',amount:390,consumption:350,notes:''},
+  {id:4,month:'2025-02',type:'water',amount:88,consumption:11,notes:''},
+  {id:5,month:'2025-03',type:'electricity',amount:610,consumption:540,notes:'AC started'},
+  {id:6,month:'2025-03',type:'water',amount:120,consumption:16,notes:'Leak detected'},
+  {id:7,month:'2025-04',type:'electricity',amount:480,consumption:420,notes:''},
+  {id:8,month:'2025-04',type:'water',amount:102,consumption:13,notes:''},
+  {id:9,month:'2025-05',type:'electricity',amount:350,consumption:310,notes:''},
+  {id:10,month:'2025-05',type:'water',amount:78,consumption:10,notes:''},
+];
+let nextId = 11;
+
+function formatMonth(ym){const[y,m]=ym.split('-');return MONTHS_FULL[parseInt(m)-1]+' '+y;}
+function getMonthTotal(ym){return bills.filter(b=>b.month===ym).reduce((s,b)=>s+b.amount,0);}
+
+function renderTable(){
+  const search  = document.getElementById('bill-search').value.toLowerCase();
+  const fyear   = document.getElementById('f-year').value;
+  const fstatus = document.getElementById('f-status').value;
+  const ftype   = document.getElementById('f-type').value;
+  let filtered  = [...bills];
+  if(search)  filtered = filtered.filter(b=>b.month.includes(search)||formatMonth(b.month).toLowerCase().includes(search));
+  if(fyear)   filtered = filtered.filter(b=>b.month.startsWith(fyear));
+  if(ftype)   filtered = filtered.filter(b=>b.type===ftype);
+  if(fstatus) filtered = filtered.filter(b=>{const mt=getMonthTotal(b.month);return fstatus==='over'?mt>BUDGET:mt<=BUDGET;});
+  filtered.sort((a,b)=>b.month.localeCompare(a.month));
+  const tbody = document.getElementById('bill-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px;">No bills found.</td></tr>';return;}
+  tbody.innerHTML = filtered.map(b=>{
+    const mt   = getMonthTotal(b.month);
+    const over = mt > BUDGET;
+    return `<tr>
+      <td><strong>${formatMonth(b.month)}</strong></td>
+      <td><span class="badge ${b.type==='electricity'?'badge-blue':'badge-gray'}">${b.type==='electricity'?'Electricity':'Water'}</span></td>
+      <td style="font-family:var(--font-d);font-size:16px;">SAR ${b.amount.toLocaleString()}</td>
+      <td style="font-family:var(--font-m);font-size:13px;">${b.consumption} ${b.type==='electricity'?'kWh':'m³'}</td>
+      <td><span class="badge ${over?'badge-red':'badge-green'}">${over?'Over':'Under'}</span></td>
+      <td><div class="tbl-actions">
+        <button class="btn btn-ghost btn-sm" onclick="viewBill(${b.id})">View</button>
+        <button class="btn btn-ghost btn-sm" onclick="editBill(${b.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBill(${b.id})">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openAdd(){
+  document.getElementById('modal-title').textContent='Add Bill';
+  ['edit-id','b-month','b-amount','b-consumption','b-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('b-type').value='electricity';
+  openModal('modal-bill');
+}
+
+function editBill(id){
+  const b=bills.find(x=>x.id===id);if(!b)return;
+  document.getElementById('modal-title').textContent='Edit Bill';
+  document.getElementById('edit-id').value=id;
+  document.getElementById('b-month').value=b.month;
+  document.getElementById('b-type').value=b.type;
+  document.getElementById('b-amount').value=b.amount;
+  document.getElementById('b-consumption').value=b.consumption;
+  document.getElementById('b-notes').value=b.notes||'';
+  openModal('modal-bill');
+}
+
+function saveBill(){
+  const editId      = document.getElementById('edit-id').value;
+  const month       = document.getElementById('b-month').value;
+  const type        = document.getElementById('b-type').value;
+  const amount      = parseFloat(document.getElementById('b-amount').value);
+  const consumption = parseFloat(document.getElementById('b-consumption').value);
+  const notes       = document.getElementById('b-notes').value;
+  if(!month||isNaN(amount)||isNaN(consumption)){alert('Please fill all required fields.');return;}
+  if(editId){
+    const b=bills.find(x=>x.id===parseInt(editId));
+    if(b){b.month=month;b.type=type;b.amount=amount;b.consumption=consumption;b.notes=notes;}
+  } else {
+    bills.push({id:nextId++,month,type,amount,consumption,notes});
+  }
+  closeModal('modal-bill');
+  renderTable();
+}
+
+function deleteBill(id){
+  if(!confirm('Delete this bill entry?'))return;
+  bills=bills.filter(b=>b.id!==id);
+  renderTable();
+}
+
+function viewBill(id){
+  const b=bills.find(x=>x.id===id);if(!b)return;
+  const mt=getMonthTotal(b.month);const over=mt>BUDGET;
+  document.getElementById('view-content').innerHTML=`
+    <div class="pf-item"><div class="pf-label">Period</div><div class="pf-val">${formatMonth(b.month)}</div></div>
+    <div class="pf-item"><div class="pf-label">Type</div><div class="pf-val">${b.type==='electricity'?'Electricity':'Water'}</div></div>
+    <div class="pf-item"><div class="pf-label">Amount</div><div class="pf-val" style="font-family:var(--font-d);font-size:22px;">SAR ${b.amount.toLocaleString()}</div></div>
+    <div class="pf-item"><div class="pf-label">Consumption</div><div class="pf-val" style="font-family:var(--font-m);">${b.consumption} ${b.type==='electricity'?'kWh':'m³'}</div></div>
+    <div class="pf-item"><div class="pf-label">Month Total</div><div class="pf-val">SAR ${mt.toLocaleString()} <span class="badge ${over?'badge-red':'badge-green'}" style="margin-left:8px;">${over?'Over Budget':'Under Budget'}</span></div></div>
+    ${b.notes?`<div class="pf-item"><div class="pf-label">Notes</div><div class="pf-val">${b.notes}</div></div>`:''}`;
+  openModal('modal-view');
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+renderTable();
+</script>
+</body>
+</html>
