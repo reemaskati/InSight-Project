@@ -1,6 +1,5 @@
-# InSight-Project
+# InSight-Website
 
-# 💰 Financial Management App
 
 A household financial management app that helps users track bills, monitor monthly spending, and receive saving tips when overspending is detected. Supports two roles: household owner and admin.
 
