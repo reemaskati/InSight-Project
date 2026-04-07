@@ -204,4 +204,99 @@ a{text-decoration:none;}
 
 <script>
 const BUDGET = 500;
-const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul
+const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TIPS = ['Set AC to 24°C — each degree higher saves ~6% on cooling costs.','Fix dripping taps immediately — a slow drip wastes 15 liters/day.','Run dishwashers only when fully loaded.','Switch to LED bulbs — they use 75% less energy.','Unplug chargers when not in use (phantom load).','Water plants in the early morning to reduce evaporation.','Install a low-flow showerhead to cut water usage by 40%.','Check your water meter monthly for unusual spikes.'];
+
+const BILLS = [
+  {userId:1,month:'2025-01',type:'electricity',amount:420,consumption:380},
+  {userId:1,month:'2025-01',type:'water',amount:95,consumption:12},
+  {userId:1,month:'2025-02',type:'electricity',amount:390,consumption:350},
+  {userId:1,month:'2025-02',type:'water',amount:88,consumption:11},
+  {userId:1,month:'2025-03',type:'electricity',amount:610,consumption:540},
+  {userId:1,month:'2025-03',type:'water',amount:120,consumption:16},
+  {userId:1,month:'2025-04',type:'electricity',amount:480,consumption:420},
+  {userId:1,month:'2025-04',type:'water',amount:102,consumption:13},
+  {userId:1,month:'2025-05',type:'electricity',amount:350,consumption:310},
+  {userId:1,month:'2025-05',type:'water',amount:78,consumption:10},
+];
+
+function getMonthTotal(ym){return BILLS.filter(b=>b.month===ym).reduce((s,b)=>s+b.amount,0);}
+
+let chartBar=null,chartDonut=null,chartLine=null;
+
+function renderDashboard(){
+  const selYear=document.getElementById('cal-year-sel').value;
+  document.getElementById('dash-year').textContent=selYear;
+  document.getElementById('qs-budget').textContent='SAR '+BUDGET;
+  const elecData=[],waterData=[];
+  let totalElec=0,totalWater=0,overMonths=0,totalSpend=0,monthCount=0,allTotals=[];
+  for(let m=1;m<=12;m++){
+    const key=`${selYear}-${String(m).padStart(2,'0')}`;
+    const elec=BILLS.filter(b=>b.month===key&&b.type==='electricity').reduce((s,b)=>s+b.amount,0);
+    const water=BILLS.filter(b=>b.month===key&&b.type==='water').reduce((s,b)=>s+b.amount,0);
+    const tot=elec+water;
+    elecData.push(elec||null);waterData.push(water||null);
+    totalElec+=elec;totalWater+=water;
+    if(tot>0){totalSpend+=tot;monthCount++;allTotals.push(tot);if(tot>BUDGET)overMonths++;}
+  }
+  document.getElementById('st-total').textContent='SAR '+totalSpend.toLocaleString();
+  document.getElementById('st-months-count').textContent=monthCount+' months recorded';
+  document.getElementById('st-avg').textContent=monthCount?'SAR '+Math.round(totalSpend/monthCount).toLocaleString():'SAR 0';
+  document.getElementById('st-over').textContent=overMonths;
+  const ovAmt=allTotals.filter(t=>t>BUDGET).reduce((s,t)=>s+(t-BUDGET),0);
+  document.getElementById('st-save').textContent='SAR '+Math.round(ovAmt).toLocaleString();
+  if(allTotals.length){document.getElementById('qs-high').textContent='SAR '+Math.max(...allTotals).toLocaleString();document.getElementById('qs-low').textContent='SAR '+Math.min(...allTotals).toLocaleString();}
+  const eb=BILLS.filter(b=>b.month.startsWith(selYear)&&b.type==='electricity');
+  const wb=BILLS.filter(b=>b.month.startsWith(selYear)&&b.type==='water');
+  document.getElementById('qs-avg-e').textContent=eb.length?'SAR '+Math.round(eb.reduce((s,b)=>s+b.amount,0)/eb.length):'—';
+  document.getElementById('qs-avg-w').textContent=wb.length?'SAR '+Math.round(wb.reduce((s,b)=>s+b.amount,0)/wb.length):'—';
+  const elecPct=(totalElec+totalWater)>0?Math.round(totalElec/(totalElec+totalWater)*100):0;
+  document.getElementById('donut-pct').textContent=elecPct+'%';
+  document.getElementById('prog-elec').style.width=elecPct+'%';
+  document.getElementById('prog-water').style.width=(100-elecPct)+'%';
+  document.getElementById('prog-elec-val').textContent='SAR '+totalElec.toLocaleString();
+  document.getElementById('prog-water-val').textContent='SAR '+totalWater.toLocaleString();
+  document.getElementById('split-elec-total').textContent='SAR '+totalElec.toLocaleString();
+  document.getElementById('split-water-total').textContent='SAR '+totalWater.toLocaleString();
+  if(chartBar)chartBar.destroy();
+  chartBar=new Chart(document.getElementById('chart-bar'),{type:'bar',data:{labels:MONTHS,datasets:[{label:'Electricity',data:elecData,backgroundColor:'rgba(74,159,255,0.75)',borderRadius:4,borderSkipped:false},{label:'Water',data:waterData,backgroundColor:'rgba(93,232,255,0.55)',borderRadius:4,borderSkipped:false},{label:'Budget',data:Array(12).fill(BUDGET),type:'line',borderColor:'rgba(244,201,75,0.6)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`SAR ${(c.parsed.y||0).toLocaleString()}`}}},scales:{x:{ticks:{color:'rgba(232,240,254,0.45)',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},y:{ticks:{color:'rgba(232,240,254,0.45)',font:{size:11},callback:v=>'SAR '+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false},beginAtZero:true}}}});
+  if(chartDonut)chartDonut.destroy();
+  chartDonut=new Chart(document.getElementById('chart-donut'),{type:'doughnut',data:{labels:['Electricity','Water'],datasets:[{data:[totalElec||1,totalWater||1],backgroundColor:['rgba(74,159,255,0.85)','rgba(93,232,255,0.7)'],borderWidth:0,cutout:'72%'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  if(chartLine)chartLine.destroy();
+  chartLine=new Chart(document.getElementById('chart-line'),{type:'line',data:{labels:MONTHS,datasets:[{label:'Electricity',data:elecData,borderColor:'#4a9fff',backgroundColor:'rgba(74,159,255,0.07)',borderWidth:2,pointRadius:3,tension:.4,fill:true},{label:'Water',data:waterData,borderColor:'#5de8ff',backgroundColor:'rgba(93,232,255,0.05)',borderWidth:2,pointRadius:3,tension:.4,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(232,240,254,0.45)',font:{size:11}},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}},y:{ticks:{color:'rgba(232,240,254,0.45)',font:{size:11},callback:v=>'SAR '+v},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false},beginAtZero:true}}}});
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  MONTHS.forEach((mn,i)=>{
+    const key=`${selYear}-${String(i+1).padStart(2,'0')}`;
+    const total=getMonthTotal(key);
+    const el=document.createElement('div');
+    if(total===0){el.className='cal-month empty';el.innerHTML=`<div class="cal-month-name">${mn}</div><div class="cal-amount">No data</div>`;}
+    else{
+      const over=total>BUDGET;el.className='cal-month '+(over?'red':'green');
+      const kwh=BILLS.filter(b=>b.month===key).reduce((s,b)=>s+b.consumption,0);
+      el.innerHTML=`<div class="cal-month-name">${mn}</div><div class="cal-amount">SAR ${total.toLocaleString()}</div><div class="cal-kwh">${kwh.toLocaleString()} units</div>`;
+      if(over){const bulb=document.createElement('button');bulb.className='bulb-btn';bulb.textContent='!';bulb.onclick=(e)=>{e.stopPropagation();showTips(e,mn);};el.appendChild(bulb);}
+    }
+    grid.appendChild(el);
+  });
+  const ol=document.getElementById('overspend-list');let rows='';
+  for(let m=1;m<=12;m++){const key=`${selYear}-${String(m).padStart(2,'0')}`;const t=getMonthTotal(key);if(t>BUDGET){const ov=t-BUDGET;rows+=`<div class="overspend-row"><span class="overspend-month">${MONTHS_FULL[m-1]} ${selYear}</span><div style="text-align:right"><div style="font-family:var(--font-d);font-size:16px;color:var(--red);">SAR ${t.toLocaleString()}</div><div class="overspend-over">+SAR ${ov.toLocaleString()} over</div></div></div>`;}}
+  ol.innerHTML=rows||'<div style="color:var(--muted);font-size:13px;">No overspending detected.</div>';
+}
+
+function showTips(e,month){
+  const popup=document.getElementById('tip-popup');
+  document.getElementById('tip-list').innerHTML=[...TIPS].sort(()=>Math.random()-.5).slice(0,4).map(t=>`<li>${t}</li>`).join('');
+  popup.style.display='block';
+  const rect=e.target.getBoundingClientRect();
+  let top=rect.bottom+10,left=rect.left-130;
+  if(left<10)left=10;if(top+220>window.innerHeight)top=rect.top-230;
+  popup.style.top=top+'px';popup.style.left=left+'px';
+}
+function closeTip(){document.getElementById('tip-popup').style.display='none';}
+document.addEventListener('click',e=>{if(!e.target.closest('#tip-popup')&&!e.target.closest('.bulb-btn'))closeTip();});
+
+renderDashboard();
+</script>
+</body>
+</html>
