@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--bg-card-hover:rgba(255,255,255,0.10);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--green:#2ecc71;--green-bg:rgba(46,204,113,0.13);--red:#e74c3c;--red-bg:rgba(231,76,60,0.13);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--gold:#f4c94b;--sidebar:230px;--r:12px;--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg-deep);color:var(--text);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:4px;}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+a{text-decoration:none;}
+
+.app-shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);height:100vh;background:rgba(0,0,0,0.25);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-logo{padding:28px 22px 20px;font-family:var(--font-d);font-size:26px;letter-spacing:-.5px;border-bottom:1px solid var(--border);}
+.sb-logo span{color:var(--accent);}
+.sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;border:1px solid transparent;text-decoration:none;}
+.sb-item:hover{background:var(--bg-card-hover);color:var(--text);}
+.sb-item.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(74,159,255,.2);}
+.sb-item svg{width:17px;height:17px;flex-shrink:0;}
+.sb-bottom{padding:14px 10px;}
+.sb-user{padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-card);border:1px solid var(--border);margin-bottom:8px;}
+.sb-user-name{font-size:13px;font-weight:600;}
+.sb-user-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.main{flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+.page{padding:32px 36px;animation:fadeup .3s ease;}
+.page-title{font-family:var(--font-d);font-size:30px;letter-spacing:-.5px;margin-bottom:6px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:15px;font-weight:600;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.stat-val{font-family:var(--font-d);font-size:26px;letter-spacing:-.5px;}
+.stat-val.green{color:var(--green);}.stat-val.red{color:var(--red);}.stat-val.gold{color:var(--gold);}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.charts-row-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-legend{display:flex;gap:16px;font-size:11px;color:var(--muted);}
+.chart-legend span{display:flex;align-items:center;gap:5px;}
+.chart-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.donut-wrap{position:relative;width:110px;height:110px;flex-shrink:0;}
+.donut-wrap canvas{position:absolute;inset:0;}
+.donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.donut-pct{font-family:var(--font-d);font-size:20px;}.donut-sub{font-size:10px;color:var(--muted);}
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.prog-label{font-size:12px;color:var(--muted);width:65px;flex-shrink:0;}
+.prog-bar-bg{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.prog-bar-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+.prog-val{font-size:12px;font-family:var(--font-m);width:60px;text-align:right;}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mini-stat{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;}
+.mini-stat-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.mini-stat-val{font-family:var(--font-d);font-size:18px;}
+.mini-stat-val.blue{color:var(--accent);}.mini-stat-val.yellow{color:var(--gold);}
+.mini-icon{font-size:13px;font-weight:700;color:var(--muted);}
+
+.cal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.cal-month{border-radius:var(--r);padding:16px;cursor:pointer;transition:transform .15s;position:relative;}
+.cal-month:hover{transform:translateY(-2px);}
+.cal-month.green{background:var(--green-bg);border:1px solid rgba(46,204,113,.25);}
+.cal-month.red{background:var(--red-bg);border:1px solid rgba(231,76,60,.25);}
+.cal-month.empty{background:var(--bg-card);border:1px dashed var(--border);}
+.cal-month-name{font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.cal-amount{font-family:var(--font-d);font-size:20px;}
+.cal-month.green .cal-amount{color:var(--green);}
+.cal-month.red .cal-amount{color:var(--red);}
+.cal-month.empty .cal-amount{color:var(--dim);font-size:14px;font-family:var(--font-b);}
+.cal-kwh{font-size:11px;color:var(--muted);margin-top:3px;}
+.bulb-btn{position:absolute;top:10px;right:10px;background:rgba(244,201,75,.15);border:1px solid rgba(244,201,75,.3);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--gold);}
+.bulb-btn:hover{background:rgba(244,201,75,.28);}
+.overspend-list{display:flex;flex-direction:column;gap:8px;}
+.overspend-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(231,76,60,.2);border-radius:var(--r-sm);}
+.overspend-month{font-weight:600;font-size:13px;}
+.overspend-over{font-size:12px;color:var(--red);}
+
+.tip-popup{position:fixed;z-index:200;background:#012458;border:1px solid var(--border-hi);border-radius:var(--r);padding:20px;width:300px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.tip-popup h4{font-size:14px;font-weight:600;margin-bottom:12px;}
+.tip-popup ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+.tip-popup li{font-size:12px;color:var(--muted);padding-left:14px;position:relative;line-height:1.5;}
+.tip-popup li::before{content:'→';position:absolute;left:0;color:var(--gold);}
+.tip-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sb-logo">in<span>S</span>ight</div>
+    <nav class="sb-nav">
+      <a href="dashboard.html" class="sb-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+      </a>
+      <a href="bills.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>Bill History
+      </a>
+      <a href="profile.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-user-name">Sara Al-Rashidi</div>
+        <div class="sb-user-role">Household User</div>
+      </div>
+      <a href="index.html" class="sb-item" style="color:var(--red);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Your utility overview for <span id="dash-year">2025</span>
+        &nbsp;<select id="cal-year-sel" onchange="renderDashboard()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:var(--r-sm);font-size:12px;outline:none;">
+          <option>2025</option><option>2024</option><option>2023</option>
+        </select>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Total Yearly Spend</div><div class="stat-val gold" id="st-total">SAR 0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;" id="st-months-count">0 months</div></div>
+        <div class="stat"><div class="stat-label">Monthly Average</div><div class="stat-val" id="st-avg">SAR 0</div></div>
+        <div class="stat"><div class="stat-label">Months Over Budget</div><div class="stat-val red" id="st-over">0</div></div>
+        <div class="stat"><div class="stat-label">Overspend Amount</div><div class="stat-val red" id="st-save">SAR 0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">vs. budget</div></div>
+      </div>
+
+      <div class="charts-row">
+        <div class="card">
+          <div class="sec-hdr"><span class="sec-title">Monthly Spending</span>
+            <div class="chart-legend"><span><i style="background:#4a9fff;"></i>Electricity</span><span><i style="background:#5de8ff;"></i>Water</span><span><i style="background:rgba(244,201,75,0.6);"></i>Budget</span></div>
+          </div>
+          <div style="position:relative;height:210px;"><canvas id="chart-bar"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><span class="sec-title">Electricity vs Water</span></div>
+          <div style="display:flex;align-items:center;gap:20px;padding:8px 0;">
+            <div class="donut-wrap"><canvas id="chart-donut"></canvas><div class="donut-label"><div class="donut-pct" id="donut-pct">—</div><div class="donut-sub">Elec.</div></div></div>
+            <div style="flex:1;">
+              <div class="prog-row"><div class="prog-label" style="color:var(--accent);">Electricity</div><div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-elec" style="background:var(--accent);width:0%;"></div></div><div class="prog-val" id="prog-elec-val">—</div></div>
+              <div class="prog-row" style="margin-bottom:0;"><div class="prog-label" style="color:#5de8ff;">Water</div><div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-water" style="background:#5de8ff;width:0%;"></div></div><div class="prog-val" id="prog-water-val">—</div></div>
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.9;">
+                <div>Electricity: <strong id="split-elec-total" style="color:var(--accent);">—</strong></div>
+                <div>Water: <strong id="split-water-total" style="color:#5de8ff;">—</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row-3">
+        <div class="card">
+          <div class="sec-hdr"><span class="sec-title">Monthly Trend</span><div class="chart-legend"><span><i style="background:#4a9fff;"></i>Electricity</span><span><i style="background:#5de8ff;"></i>Water</span></div></div>
+          <div style="position:relative;height:190px;"><canvas id="chart-line"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="sec-hdr"><span class="sec-title">Quick Stats</span></div>
+          <div class="mini-grid" style="margin-bottom:12px;">
+            <div class="mini-stat"><div><div class="mini-stat-lbl">Highest</div><div class="mini-stat-val red" id="qs-high">—</div></div><div class="mini-icon">HI</div></div>
+            <div class="mini-stat"><div><div class="mini-stat-lbl">Lowest</div><div class="mini-stat-val" style="color:var(--green);" id="qs-low">—</div></div><div class="mini-icon">LO</div></div>
+          </div>
+          <div class="mini-grid">
+            <div class="mini-stat"><div><div class="mini-stat-lbl">Avg Elec.</div><div class="mini-stat-val blue" id="qs-avg-e">—</div></div><div class="mini-icon" style="color:var(--accent);">EL</div></div>
+            <div class="mini-stat"><div><div class="mini-stat-lbl">Avg Water</div><div class="mini-stat-val yellow" id="qs-avg-w">—</div></div><div class="mini-icon" style="color:var(--gold);">WA</div></div>
+          </div>
+          <div style="margin-top:12px;background:rgba(244,201,75,0.08);border:1px solid rgba(244,201,75,0.2);border-radius:var(--r-sm);padding:10px 12px;">
+            <div style="font-size:11px;color:var(--gold);font-weight:600;margin-bottom:4px;">Budget Threshold</div>
+            <div style="font-family:var(--font-d);font-size:18px;color:var(--gold);" id="qs-budget">SAR 500</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">per month</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div class="sec-hdr"><span class="sec-title">Monthly Overview</span>
+          <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);">
+            <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--green);display:inline-block;"></span>Under budget</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--red);display:inline-block;"></span>Over budget</span>
+          </div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-hdr"><span class="sec-title">Overspending Months</span></div>
+        <div class="overspend-list" id="overspend-list"><div style="color:var(--muted);font-size:13px;">No overspending detected.</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="tip-popup" class="tip-popup" style="display:none;">
+  <button class="tip-close" onclick="closeTip()">×</button>
+  <h4>💡 Saving Tips</h4>
+  <ul id="tip-list"></ul>
+</div>
+
+<script>
+const BUDGET = 500;
+const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul
