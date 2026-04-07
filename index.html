@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — Utility Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:var(--font-b);background:var(--bg-deep);color:var(--text);overflow-x:hidden;}
+@keyframes fadeup{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.land-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 60px;position:sticky;top:0;z-index:50;background:rgba(1,15,42,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.land-logo{font-family:var(--font-d);font-size:28px;letter-spacing:-.5px;}
+.land-logo span{color:var(--accent);}
+.land-nav-btns{display:flex;gap:12px;}
+
+.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 40px 80px;position:relative;min-height:90vh;}
+.land-hero::before{content:'';position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(74,159,255,.10) 0%,transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--accent-bg);border:1px solid rgba(74,159,255,.25);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:28px;letter-spacing:.4px;}
+.hero-title{font-family:var(--font-d);font-size:64px;letter-spacing:-2px;line-height:1.1;margin-bottom:22px;max-width:700px;animation:fadeup .6s ease;}
+.hero-title span{color:var(--accent);}
+.hero-sub{font-size:18px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:44px;animation:fadeup .7s ease;}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:72px;padding-top:48px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.hero-stat-val{font-family:var(--font-d);font-size:34px;color:var(--accent);}
+.hero-stat-lbl{font-size:13px;color:var(--muted);margin-top:4px;}
+
+.land-features{padding:80px 60px;background:rgba(0,0,0,0.2);}
+.land-section-title{font-family:var(--font-d);font-size:38px;letter-spacing:-.5px;text-align:center;margin-bottom:10px;}
+.land-section-sub{color:var(--muted);font-size:15px;text-align:center;margin-bottom:52px;}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto;}
+.feat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;transition:border-color .2s,transform .2s;}
+.feat-card:hover{border-color:var(--border-hi);transform:translateY(-3px);}
+.feat-icon{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:16px;text-transform:uppercase;letter-spacing:.6px;}
+.feat-title{font-size:17px;font-weight:600;margin-bottom:8px;}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+.land-cta{padding:80px 60px;text-align:center;}
+.land-cta-box{background:linear-gradient(135deg,rgba(74,159,255,.12),rgba(155,89,182,.10));border:1px solid rgba(74,159,255,.2);border-radius:24px;padding:60px;max-width:700px;margin:0 auto;}
+.land-footer{padding:28px 60px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--dim);}
+
+.btn-primary-hero{background:var(--accent);color:#fff;padding:14px 32px;font-size:15px;border:none;border-radius:var(--r-sm);cursor:pointer;font-weight:600;font-family:var(--font-b);text-decoration:none;display:inline-block;}
+.btn-primary-hero:hover{opacity:.88;}
+.btn-outline-hero{background:transparent;border:1px solid var(--border-hi);color:var(--text);padding:14px 32px;font-size:15px;border-radius:var(--r-sm);cursor:pointer;font-weight:600;font-family:var(--font-b);text-decoration:none;display:inline-block;}
+.btn-outline-hero:hover{background:var(--bg-card);}
+.btn-outline-sm{background:transparent;border:1px solid var(--border-hi);color:var(--text);padding:6px 16px;font-size:13px;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-b);text-decoration:none;display:inline-block;}
+.btn-accent-sm{background:var(--accent);color:#fff;padding:6px 16px;font-size:13px;border:none;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-b);text-decoration:none;display:inline-block;}
+</style>
+</head>
+<body>
+
+<nav class="land-nav">
+  <div class="land-logo">in<span>S</span>ight</div>
+  <div class="land-nav-btns">
+    <a href="login.html" class="btn-outline-sm">Sign In</a>
+    <a href="login.html" class="btn-accent-sm">Get Started</a>
+  </div>
+</nav>
+
+<section class="land-hero">
+  <div class="hero-badge">Vision 2030 Aligned · Saudi Arabia</div>
+  <h1 class="hero-title">Track your utilities.<br>Cut costs with <span>inSight</span>.</h1>
+  <p class="hero-sub">Record, analyze, and compare your monthly electricity and water bills — all in one simple, beautiful dashboard.</p>
+  <div class="hero-btns">
+    <a href="login.html" class="btn-primary-hero">Get Started Free</a>
+    <a href="login.html" class="btn-outline-hero">Sign In</a>
+  </div>
+  <div class="hero-stats">
+    <div style="text-align:center"><div class="hero-stat-val">20%</div><div class="hero-stat-lbl">Avg. energy savings with digital tracking</div></div>
+    <div style="text-align:center"><div class="hero-stat-val">SAR 500</div><div class="hero-stat-lbl">Average monthly household utility spend</div></div>
+    <div style="text-align:center"><div class="hero-stat-val">86%</div><div class="hero-stat-lbl">Users experienced unexpected bill spikes</div></div>
+  </div>
+</section>
+
+<section class="land-features">
+  <div class="land-section-title">Everything you need</div>
+  <div class="land-section-sub">Designed for Saudi households. No hardware. No complexity.</div>
+  <div class="feat-grid">
+    <div class="feat-card"><div class="feat-icon">Dashboard</div><div class="feat-title">Visual Dashboard</div><div class="feat-desc">Beautiful charts showing monthly trends, electricity vs water split, and spending patterns at a glance.</div></div>
+    <div class="feat-card"><div class="feat-icon">Dual Utility</div><div class="feat-title">Electricity & Water</div><div class="feat-desc">Track both electricity and water bills in one place — something no other app currently offers.</div></div>
+    <div class="feat-card"><div class="feat-icon">Alerts</div><div class="feat-title">Budget Alerts</div><div class="feat-desc">Set a monthly budget and instantly see which months you overspent with color-coded indicators.</div></div>
+    <div class="feat-card"><div class="feat-icon">Tips</div><div class="feat-title">Smart Saving Tips</div><div class="feat-desc">Get personalized recommendations based on your consumption data to reduce costs and waste.</div></div>
+    <div class="feat-card"><div class="feat-icon">Search</div><div class="feat-title">Search & Filter</div><div class="feat-desc">Find any bill instantly. Filter by month, year, utility type, or budget status with one click.</div></div>
+    <div class="feat-card"><div class="feat-icon">History</div><div class="feat-title">Full Bill History</div><div class="feat-desc">Keep a complete digital record of all your bills. Add, edit, delete, and compare across any time period.</div></div>
+  </div>
+</section>
+
+<section class="land-cta">
+  <div class="land-cta-box">
+    <div style="font-family:var(--font-d);font-size:34px;margin-bottom:14px;">Ready to take control?</div>
+    <div style="color:var(--muted);font-size:15px;max-width:420px;margin:0 auto 32px;line-height:1.6;">Join households across Saudi Arabia who are saving money and resources with inSight.</div>
+    <a href="login.html" class="btn-primary-hero">Create Free Account</a>
+  </div>
+</section>
+
+<footer class="land-footer">© 2025 inSight — IT320 Course Project · King Saud University · Group 7</footer>
+
+</body>
+</html>
