@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inSight — My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#01204c;--bg-deep:#010f2a;--bg-card:rgba(255,255,255,0.06);--bg-card-hover:rgba(255,255,255,0.10);--border:rgba(255,255,255,0.10);--border-hi:rgba(255,255,255,0.20);--text:#e8f0fe;--muted:rgba(232,240,254,0.55);--dim:rgba(232,240,254,0.30);--accent:#4a9fff;--accent-bg:rgba(74,159,255,0.13);--gold:#f4c94b;--red:#e74c3c;--sidebar:230px;--r:12px;--r-sm:8px;--font-d:'Abril Fatface',serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg-deep);color:var(--text);}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:4px;}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+a{text-decoration:none;}
+
+.app-shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);height:100vh;background:rgba(0,0,0,0.25);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-logo{padding:28px 22px 20px;font-family:var(--font-d);font-size:26px;letter-spacing:-.5px;border-bottom:1px solid var(--border);}
+.sb-logo span{color:var(--accent);}
+.sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);font-size:14px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;border:1px solid transparent;text-decoration:none;}
+.sb-item:hover{background:var(--bg-card-hover);color:var(--text);}
+.sb-item.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(74,159,255,.2);}
+.sb-item svg{width:17px;height:17px;flex-shrink:0;}
+.sb-bottom{padding:14px 10px;}
+.sb-user{padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-card);border:1px solid var(--border);margin-bottom:8px;}
+.sb-user-name{font-size:13px;font-weight:600;}
+.sb-user-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.main{flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+.page{padding:32px 36px;animation:fadeup .3s ease;}
+.page-title{font-family:var(--font-d);font-size:30px;letter-spacing:-.5px;margin-bottom:6px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.card-sm{padding:14px 18px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:15px;font-weight:600;}
+.divider{height:1px;background:var(--border);margin:24px 0;}
+.btn{padding:10px 18px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:opacity .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-ghost{background:transparent;border:1px solid var(--border-hi);color:var(--text);}
+.btn-ghost:hover{background:var(--bg-card-hover);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.profile-card{display:flex;align-items:center;gap:20px;padding:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;}
+.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7b6ff0);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:24px;color:#fff;flex-shrink:0;}
+.profile-name{font-family:var(--font-d);font-size:22px;}
+.profile-role{font-size:12px;color:var(--muted);margin-top:3px;}
+.profile-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.pf-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;}
+.pf-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;}
+.pf-val{font-size:15px;font-weight:500;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#012458;border:1px solid var(--border-hi);border-radius:18px;padding:32px;width:420px;max-height:90vh;overflow-y:auto;animation:fadeup .3s ease;}
+.modal h2{font-family:var(--font-d);font-size:22px;margin-bottom:20px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.fg input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .2s;font-family:var(--font-b);}
+.fg input:focus{border-color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sb-logo">in<span>S</span>ight</div>
+    <nav class="sb-nav">
+      <a href="dashboard.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+      </a>
+      <a href="bills.html" class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>Bill History
+      </a>
+      <a href="profile.html" class="sb-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile
+      </a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-user-name">Sara Al-Rashidi</div>
+        <div class="sb-user-role">Household User</div>
+      </div>
+      <a href="index.html" class="sb-item" style="color:var(--red);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-title">My Profile</div>
+      <div class="page-sub">Manage your account information</div>
+
+      <div class="profile-card">
+        <div class="avatar" id="prof-avatar">SA</div>
+        <div>
+          <div class="profile-name" id="prof-name">Sara Al-Rashidi</div>
+          <div class="profile-role" id="prof-role">Household User</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="openEdit()">Edit Profile</button>
+      </div>
+
+      <div class="profile-fields" id="prof-fields">
+        <div class="pf-item"><div class="pf-label">Full Name</div><div class="pf-val" id="pf-name">Sara Al-Rashidi</div></div>
+        <div class="pf-item"><div class="pf-label">Email</div><div class="pf-val" id="pf-email">sara@example.com</div></div>
+        <div class="pf-item"><div class="pf-label">Age</div><div class="pf-val" id="pf-age">29</div></div>
+        <div class="pf-item"><div class="pf-label">Username</div><div class="pf-val" style="font-family:var(--font-m);" id="pf-username">user</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="sec-hdr"><span class="sec-title">Budget Settings</span></div>
+      <div class="card card-sm" style="max-width:380px;">
+        <div class="fg" style="margin-bottom:0;">
+          <label>Monthly Budget Threshold (SAR)</label>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <input type="number" id="budget-input" style="flex:1;" placeholder="e.g. 500" value="500">
+            <button class="btn btn-primary" style="width:auto;padding:10px 18px;" onclick="saveBudget()">Save</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px;">Current: <strong id="budget-display" style="color:var(--gold);">SAR 500</strong></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h2>Edit Profile</h2>
+    <div class="fg"><label>Name</label><input type="text" id="ep-name" value="Sara Al-Rashidi"></div>
+    <div class="fg"><label>Email</label><input type="email" id="ep-email" value="sara@example.com"></div>
+    <div class="fg"><label>Age</label><input type="number" id="ep-age" value="29"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEdit(){document.getElementById('modal-edit').classList.add('open');}
+function closeEdit(){document.getElementById('modal-edit').classList.remove('open');}
+
+function saveProfile(){
+  const name  = document.getElementById('ep-name').value;
+  const email = document.getElementById('ep-email').value;
+  const age   = document.getElementById('ep-age').value;
+  document.getElementById('prof-name').textContent  = name;
+  document.getElementById('pf-name').textContent    = name;
+  document.getElementById('pf-email').textContent   = email;
+  document.getElementById('pf-age').textContent     = age;
+  const initials = name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('prof-avatar').textContent = initials;
+  closeEdit();
+}
+
+function saveBudget(){
+  const v = parseFloat(document.getElementById('budget-input').value);
+  if(isNaN(v)||v<=0){alert('Enter a valid budget.');return;}
+  document.getElementById('budget-display').textContent = 'SAR ' + v;
+  alert('Budget updated to SAR ' + v);
+}
+
+document.getElementById('modal-edit').addEventListener('click', e => {
+  if(e.target === document.getElementById('modal-edit')) closeEdit();
+});
+</script>
+</body>
+</html>
