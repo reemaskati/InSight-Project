@@ -11,7 +11,7 @@ A household financial management app that helps users track bills, monitor month
 - Secure login and registration
 
 ## Tech Stack
-- Frontend: HTML, CSS, JavaScript
+- Frontend: HTML, CSS, JavaScript , PHP
 - Database: MySQL
 
 ## Course
