@@ -7,51 +7,82 @@ $userName = $_SESSION['user_name'];
 $budget   = (float)($_SESSION['user_budget'] ?? 500);
 
 // ── Handle POST actions ───────────────────────────────────────
-$msg   = '';
-$error = '';
+$msg        = '';
+$error      = '';
+$modalError = '';   // error shown INSIDE modal (keeps modal open)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add') {
-        $type  = $_POST['bill_type']     ?? '';
-        $month = $_POST['billing_month'] ?? '';
-        $meter = (float)($_POST['meter_reading'] ?? 0);
-        $cost  = (float)($_POST['total_cost']    ?? 0);
-        if (!$type || !$month || $meter < 0 || $cost < 0) {
-            $error = 'Please fill in all fields with valid values.';
+        $type     = $_POST['bill_type']     ?? '';
+        $month    = $_POST['billing_month'] ?? '';
+        $meterRaw = $_POST['meter_reading'] ?? '';
+        $costRaw  = $_POST['total_cost']    ?? '';
+        $meter    = (float)$meterRaw;
+        $cost     = (float)$costRaw;
+
+        if (!$type || !$month || $meterRaw === '' || $costRaw === '') {
+            $modalError = 'Please fill in all fields.';
+        } elseif (!is_numeric($meterRaw) || !is_numeric($costRaw)) {
+            $modalError = 'Meter reading and total cost must be numerical values.';
+        } elseif ($meter < 0 || $cost < 0) {
+            $modalError = 'Values cannot be negative.';
         } else {
             $r = addBill($userID, $type, $month, $meter, $cost);
-            $msg = $r['success'] ? 'Bill added successfully!' : $r['message'];
-            if (!$r['success']) $error = $r['message'];
+            if ($r['success']) {
+                $_SESSION['flash'] = ['type'=>'success','msg'=>'Bill added successfully!'];
+                header('Location: bills.php'); exit;
+            }
+            $modalError = $r['message'];
         }
+
     } elseif ($action === 'update') {
-        $billID = (int)($_POST['bill_id'] ?? 0);
-        $type   = $_POST['bill_type']     ?? '';
-        $month  = $_POST['billing_month'] ?? '';
-        $meter  = (float)($_POST['meter_reading'] ?? 0);
-        $cost   = (float)($_POST['total_cost']    ?? 0);
-        $r = updateBill($billID, $userID, $type, $month, $meter, $cost);
-        $msg = $r['success'] ? 'Bill updated successfully!' : $r['message'];
-        if (!$r['success']) $error = $r['message'];
+        $billID   = (int)($_POST['bill_id'] ?? 0);
+        $type     = $_POST['bill_type']     ?? '';
+        $month    = $_POST['billing_month'] ?? '';
+        $meterRaw = $_POST['meter_reading'] ?? '';
+        $costRaw  = $_POST['total_cost']    ?? '';
+        $meter    = (float)$meterRaw;
+        $cost     = (float)$costRaw;
+
+        if (!$type || !$month || $meterRaw === '' || $costRaw === '') {
+            $modalError = 'Please fill in all fields.';
+        } elseif (!is_numeric($meterRaw) || !is_numeric($costRaw)) {
+            $modalError = 'Meter reading and total cost must be numerical values.';
+        } elseif ($meter < 0 || $cost < 0) {
+            $modalError = 'Values cannot be negative.';
+        } else {
+            $r = updateBill($billID, $userID, $type, $month, $meter, $cost);
+            if ($r['success']) {
+                $_SESSION['flash'] = ['type'=>'success','msg'=>'Bill updated successfully!'];
+                header('Location: bills.php'); exit;
+            }
+            $modalError = $r['message'];
+        }
+
     } elseif ($action === 'delete') {
         $billID = (int)($_POST['bill_id'] ?? 0);
         deleteBill($billID, $userID);
-        $msg = 'Bill deleted.';
+        $_SESSION['flash'] = ['type'=>'success','msg'=>'Bill deleted successfully.'];
+        header('Location: bills.php'); exit;
     }
-    // Redirect to avoid resubmission
-    header('Location: bills.php?msg=' . urlencode($msg) . ($error ? '&err=1' : ''));
-    exit;
+    // If we reach here, there was a modal validation error — don't redirect
 }
 
-if (isset($_GET['msg'])) $msg   = $_GET['msg'];
-if (isset($_GET['err'])) $error = $msg;
+// ── Flash messages (from redirect) ───────────────────────────
+if (!empty($_SESSION['flash'])) {
+    $flash = $_SESSION['flash'];
+    unset($_SESSION['flash']);
+    if ($flash['type'] === 'success') $msg   = $flash['msg'];
+    else                               $error = $flash['msg'];
+}
 
 // ── Filters ───────────────────────────────────────────────────
-$search     = trim($_GET['search'] ?? '');
-$filterType = $_GET['type']   ?? '';
-$filterYear = $_GET['year']   ?? '';
-$filterStat = $_GET['status'] ?? '';
+$search      = trim($_GET['search'] ?? '');
+$filterType  = $_GET['type']  ?? '';
+$filterYear  = $_GET['year']  ?? '';
+$filterMonth = $_GET['month'] ?? '';
 
 // Get all bills with filters
 $db     = getDB();
@@ -63,20 +94,14 @@ if ($search !== '') {
     $sql .= " AND (DATE_FORMAT(BillingMonth,'%M %Y') LIKE ? OR DATE_FORMAT(BillingMonth,'%Y-%m') LIKE ?)";
     $like = '%'.$search.'%'; $params[]=$like; $params[]=$like; $types.='ss';
 }
-if ($filterType !== '') { $sql.=" AND BillType=?"; $params[]=$filterType; $types.='s'; }
-if ($filterYear !== '') { $sql.=" AND YEAR(BillingMonth)=?"; $params[]=(int)$filterYear; $types.='i'; }
+if ($filterType  !== '') { $sql.=" AND BillType=?";            $params[]=$filterType;       $types.='s'; }
+if ($filterYear  !== '') { $sql.=" AND YEAR(BillingMonth)=?";  $params[]=(int)$filterYear;  $types.='i'; }
+if ($filterMonth !== '') { $sql.=" AND MONTH(BillingMonth)=?"; $params[]=(int)$filterMonth; $types.='i'; }
 $sql .= " ORDER BY BillingMonth DESC, BillType";
 $stmt = $db->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $bills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Apply status filter in PHP (needs budget)
-if ($filterStat === 'over') {
-    $bills = array_filter($bills, fn($b) => $b['TotalCost'] > $budget);
-} elseif ($filterStat === 'ok') {
-    $bills = array_filter($bills, fn($b) => $b['TotalCost'] <= $budget);
-}
 $bills = array_values($bills);
 
 // Get available years for filter dropdown
@@ -153,6 +178,18 @@ tr:hover td{background:var(--bg-card-hover);}
 .alert{padding:12px 16px;border-radius:var(--r-sm);font-size:13px;margin-bottom:16px;}
 .alert-success{background:var(--green-bg);border:1px solid rgba(46,204,113,.3);color:var(--green);}
 .alert-error{background:var(--red-bg);border:1px solid rgba(231,76,60,.3);color:var(--red);}
+/* ── Toast ── */
+.toast-wrap{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:12px;font-size:13px;font-weight:500;min-width:240px;max-width:340px;pointer-events:auto;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .3s ease;}
+.toast-success{background:#0d3d1f;border:1px solid rgba(46,204,113,.35);color:#2ecc71;}
+.toast-error{background:#3d0d0d;border:1px solid rgba(231,76,60,.35);color:#e74c3c;}
+.toast-icon{font-size:16px;flex-shrink:0;}
+.toast-close{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:16px;padding:0 0 0 8px;line-height:1;}
+.toast-close:hover{opacity:1;}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(12px);}}
+/* ── Inline modal error ── */
+.modal-err{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,.3);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal{background:#012458;border:1px solid var(--border-hi);border-radius:18px;padding:32px;width:440px;max-height:90vh;overflow-y:auto;animation:fadeup .3s ease;}
@@ -200,12 +237,6 @@ tr:hover td{background:var(--bg-card-hover);}
       <div class="page-title">Bill History</div>
       <div class="page-sub">Manage all your electricity and water bills</div>
 
-      <?php if ($msg && !$error): ?>
-        <div class="alert alert-success">✅ <?= htmlspecialchars($msg) ?></div>
-      <?php elseif ($error): ?>
-        <div class="alert alert-error">⚠️ <?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
-
       <!-- TOOLBAR -->
       <form method="GET" action="bills.php">
         <div class="toolbar">
@@ -215,19 +246,21 @@ tr:hover td{background:var(--bg-card-hover);}
           </div>
           <select name="type" class="filter-select">
             <option value="">All Types</option>
-            <option value="electricity" <?= $filterType==='electricity'?'selected':'' ?>>Electricity</option>
-            <option value="water"       <?= $filterType==='water'      ?'selected':'' ?>>Water</option>
+            <option value="electricity" <?= $filterType==='electricity'?'selected':'' ?>>⚡ Electricity</option>
+            <option value="water"       <?= $filterType==='water'      ?'selected':'' ?>>💧 Water</option>
+          </select>
+          <select name="month" class="filter-select">
+            <option value="">All Months</option>
+            <?php $mNames=['1'=>'January','2'=>'February','3'=>'March','4'=>'April','5'=>'May','6'=>'June','7'=>'July','8'=>'August','9'=>'September','10'=>'October','11'=>'November','12'=>'December'];
+            foreach($mNames as $num=>$name): ?>
+              <option value="<?= $num ?>" <?= $filterMonth===$num?'selected':'' ?>><?= $name ?></option>
+            <?php endforeach; ?>
           </select>
           <select name="year" class="filter-select">
             <option value="">All Years</option>
             <?php foreach ($years as $yr): ?>
               <option value="<?= $yr ?>" <?= $filterYear==$yr?'selected':'' ?>><?= $yr ?></option>
             <?php endforeach; ?>
-          </select>
-          <select name="status" class="filter-select">
-            <option value="">All Status</option>
-            <option value="over" <?= $filterStat==='over'?'selected':'' ?>>Over Budget</option>
-            <option value="ok"   <?= $filterStat==='ok'  ?'selected':'' ?>>Within Budget</option>
           </select>
           <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
           <a href="bills.php" class="btn btn-ghost btn-sm">Clear</a>
@@ -245,10 +278,19 @@ tr:hover td{background:var(--bg-card-hover);}
           <tbody>
             <?php if (empty($bills)): ?>
               <tr><td colspan="7">
+                <?php $isFiltered = $search !== '' || $filterType !== '' || $filterYear !== '' || $filterMonth !== ''; ?>
                 <div class="empty-state">
-                  <div class="empty-icon">📋</div>
-                  <p>No bills found.</p>
-                  <button class="btn btn-primary" onclick="openAddModal()">+ Add First Bill</button>
+                  <?php if ($isFiltered): ?>
+                    <div class="empty-icon">🔍</div>
+                    <p style="font-weight:600;margin-bottom:6px;">No bills match your search</p>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Try adjusting the filters or search term.</p>
+                    <a href="bills.php" class="btn btn-ghost">Clear Filters</a>
+                  <?php else: ?>
+                    <div class="empty-icon">📋</div>
+                    <p style="font-weight:600;margin-bottom:6px;">No bills yet</p>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Start by adding your first electricity or water bill.</p>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ Add First Bill</button>
+                  <?php endif; ?>
                 </div>
               </td></tr>
             <?php else: ?>
@@ -292,6 +334,9 @@ tr:hover td{background:var(--bg-card-hover);}
 <div class="modal-overlay" id="bill-modal">
   <div class="modal">
     <h2 id="modal-title">Add Bill</h2>
+    <?php if ($modalError): ?>
+      <div class="modal-err">⚠️ <?= htmlspecialchars($modalError) ?></div>
+    <?php endif; ?>
     <form method="POST" action="bills.php">
       <input type="hidden" name="action" id="f-action" value="add">
       <input type="hidden" name="bill_id" id="f-bill-id" value="">
@@ -338,7 +383,35 @@ tr:hover td{background:var(--bg-card-hover);}
   </div>
 </div>
 
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
 <script>
+// ── Toast system ──────────────────────────────────────────────
+function showToast(type, msg, duration = 4000) {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type;
+  t.innerHTML = `<span class="toast-icon">${type === 'success' ? '✅' : '⚠️'}</span>
+    <span>${msg}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(t);
+  if (duration > 0) {
+    setTimeout(() => {
+      t.style.animation = 'toastOut .3s ease forwards';
+      setTimeout(() => t.remove(), 300);
+    }, duration);
+  }
+}
+
+<?php if ($msg): ?>
+showToast('success', <?= json_encode($msg) ?>);
+<?php endif; ?>
+<?php if ($error): ?>
+showToast('error', <?= json_encode($error) ?>, 0);
+<?php endif; ?>
+
+// ── Modal helpers ─────────────────────────────────────────────
 function openAddModal(){
   document.getElementById('modal-title').textContent = 'Add Bill';
   document.getElementById('f-action').value  = 'add';
@@ -374,6 +447,10 @@ function openDeleteConfirm(id){
       document.getElementById(id).classList.remove('open');
   });
 });
+
+<?php if ($modalError): ?>
+document.getElementById('bill-modal').classList.add('open');
+<?php endif; ?>
 
 <?php if ($editBill): ?>
 openEditModal(<?= $editBill['BillID'] ?>,'<?= $editBill['BillType'] ?>',
