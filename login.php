@@ -57,7 +57,7 @@ body::after{content:'';position:absolute;width:500px;height:500px;background:rad
 .fg select option{background:#01204c;}
 .btn-primary{background:var(--accent);color:#fff;width:100%;padding:12px 20px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;font-family:var(--font-b);}
 .btn-primary:hover{opacity:.88;}
-.err{color:#e74c3c;font-size:12px;margin-bottom:12px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:6px;padding:8px 12px;}
+.err{color:#e74c3c;font-size:12px;margin-bottom:14px;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
 .demo-hint{margin-top:18px;text-align:center;font-size:12px;color:var(--dim);}
 .demo-hint strong{color:var(--muted);}
 </style>
@@ -69,7 +69,7 @@ body::after{content:'';position:absolute;width:500px;height:500px;background:rad
   <div class="login-sub">Utility Consumption &amp; Tracking System</div>
   <div class="login-card">
     <?php if ($error): ?>
-      <div class="err"><?= htmlspecialchars($error) ?></div>
+      <div class="err"><span>⚠️</span><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     <form method="POST" action="login.php">
       <div class="fg">
