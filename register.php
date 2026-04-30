@@ -83,7 +83,7 @@ a{text-decoration:none;}
 .fg input:focus{border-color:var(--accent);background:rgba(74,159,255,0.07);}
 .btn-primary{background:var(--accent);color:#fff;width:100%;padding:12px 20px;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;font-family:var(--font-b);transition:opacity .2s;}
 .btn-primary:hover{opacity:.88;}
-.err{color:var(--red);font-size:12px;margin-bottom:12px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:6px;padding:10px 14px;}
+.err{color:var(--red);font-size:12px;margin-bottom:14px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.25);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
 .login-link{margin-top:16px;text-align:center;font-size:13px;color:var(--muted);}
 .login-link a{color:var(--accent);}
 </style>
@@ -96,7 +96,7 @@ a{text-decoration:none;}
   <div class="card">
     <h2>Register</h2>
     <?php if ($error): ?>
-      <div class="err"><?= htmlspecialchars($error) ?></div>
+      <div class="err"><span>⚠️</span><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
     <form method="POST" action="register.php">
       <div class="row">
