@@ -90,7 +90,7 @@ a{text-decoration:none;}
 </head>
 <body>
 <div class="wrap">
-  <a href="index.html" class="auth-back">← Back to home</a>
+  <a href="index.php" class="auth-back">← Back to home</a>
   <div class="logo">in<span>S</span>ight</div>
   <div class="sub">Create your free account</div>
   <div class="card">
